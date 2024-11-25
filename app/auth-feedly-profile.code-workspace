@@ -1,0 +1,13 @@
+{
+  "folders": [
+	{
+		"name": "auth-feedly-profile",
+		"path": ".."
+	},
+	{
+		"name": "store",
+		"path": "../../feedly-profile/store"
+	}
+],
+  "settings": {}
+}

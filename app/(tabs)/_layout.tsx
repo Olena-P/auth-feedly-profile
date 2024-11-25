@@ -1,45 +1,80 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import React from "react";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Feed from "./feeds";
+import Profile from "./profile";
+import { useTheme } from "../../contexts/ThemeContext";
+import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+const Tab = createMaterialTopTabNavigator();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+function CustomTabBarIcon(props: {
+  name: React.ComponentProps<typeof FontAwesome>["name"];
+  color: string;
+  label: string;
+}) {
+  const { name, color, label } = props;
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+    <View style={styles.tabBarItem}>
+      <FontAwesome name={name} size={18} color={color} style={styles.icon} />
+      <Text style={[styles.label, { color }]}>{label}</Text>
+    </View>
   );
 }
+
+export default function TabLayout() {
+  const { theme } = useTheme();
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <Tab.Navigator
+        screenOptions={{
+          tabBarActiveTintColor: theme.colors.tabIconSelected,
+          tabBarInactiveTintColor: theme.colors.tabIconDefault,
+          tabBarStyle: {
+            backgroundColor: theme.colors.background,
+          },
+          tabBarIndicatorStyle: {
+            backgroundColor: theme.colors.primary,
+          },
+        }}
+      >
+        <Tab.Screen
+          name="feeds"
+          component={Feed}
+          options={{
+            tabBarLabel: ({ color }) => (
+              <CustomTabBarIcon name="list" color={color} label="Feeds" />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="profile"
+          component={Profile}
+          options={{
+            tabBarLabel: ({ color }) => (
+              <CustomTabBarIcon name="user" color={color} label="Profile" />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabBarItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  icon: {
+    marginRight: 6,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
+});
