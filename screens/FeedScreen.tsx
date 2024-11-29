@@ -101,7 +101,7 @@ const FeedScreen = () => {
     <AuthGuard>
       <FlatList
         data={data}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => <FeedItem item={item} />}
         onEndReached={() => fetchData()}
         onEndReachedThreshold={0.1}
