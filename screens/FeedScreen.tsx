@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   FlatList,
   View,
@@ -27,30 +27,35 @@ const FeedScreen = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async (isRefresh = false) => {
-    if (loadingMore && !isRefresh) return;
+  const fetchData = useCallback(
+    async (isRefresh = false) => {
+      if (loadingMore && !isRefresh) return;
 
-    isRefresh ? setRefreshing(true) : setLoadingMore(true);
-    setError(null);
+      isRefresh ? setRefreshing(true) : setLoadingMore(true);
+      setError(null);
 
-    try {
-      const response = await axios.get(
-        `https://picsum.photos/v2/list?page=${isRefresh ? 1 : page}&limit=10`
-      );
-      setData(isRefresh ? response.data : [...data, ...response.data]);
-      setPage(isRefresh ? 2 : page + 1);
-    } catch (err) {
-      setError("Failed to load data. Please try again.");
-      Alert.alert("Error", "Failed to load data. Please try again.");
-    } finally {
-      setRefreshing(false);
-      setLoadingMore(false);
-    }
-  };
+      try {
+        const response = await axios.get(
+          `https://picsum.photos/v2/list?page=${isRefresh ? 1 : page}&limit=10`
+        );
+        setData((prevData) =>
+          isRefresh ? response.data : [...prevData, ...response.data]
+        );
+        setPage(isRefresh ? 2 : page + 1);
+      } catch (err) {
+        setError("Failed to load data. Please try again.");
+        Alert.alert("Error", "Failed to load data. Please try again.");
+      } finally {
+        setRefreshing(false);
+        setLoadingMore(false);
+      }
+    },
+    [loadingMore, page]
+  );
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const renderFooter = () => {
     if (!loadingMore) return null;
@@ -77,23 +82,27 @@ const FeedScreen = () => {
     );
   };
 
+  const FeedItem = ({ item }: { item: DataItem }) => {
+    return (
+      <View style={styles.card}>
+        <Image
+          source={{ uri: item.download_url }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <View style={styles.authorContainer}>
+          <RegularText style={styles.authorText}>{item.author}</RegularText>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <AuthGuard>
       <FlatList
         data={data}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }: { item: DataItem }) => (
-          <View style={styles.card}>
-            <Image
-              source={{ uri: item.download_url }}
-              style={styles.image}
-              resizeMode="cover"
-            />
-            <View style={styles.authorContainer}>
-              <RegularText style={styles.authorText}>{item.author}</RegularText>
-            </View>
-          </View>
-        )}
+        renderItem={({ item }) => <FeedItem item={item} />}
         onEndReached={() => fetchData()}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
